@@ -11,7 +11,13 @@ find_package(glfw3 REQUIRED)
 add_executable(SolarSystem
     src/main.cpp
     src/Planeta.cpp
+    src/Janela.cpp
+    src/Camera.cpp
+    src/Fisica.cpp
 )
+
+# Ensina o compilador a buscar arquivos na pasta include/
+target_include_directories(SolarSystem PRIVATE include)
 
 target_link_libraries(SolarSystem
     OpenGL::GL

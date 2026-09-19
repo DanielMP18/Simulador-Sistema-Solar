@@ -1,42 +1,21 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include "Janela.hpp"
 
 int main()
 {
-    if (!glfwInit())
+    Janela janela(800, 600, "Sistema Solar");
+
+    while (!janela.deveFechar())
     {
-        std::cerr << "Erro ao inicializar GLFW\n";
-        return -1;
+        janela.limpar();
+
+        // (No futuro, as chamadas de desenho e atualização da lógica virão aqui)
+
+        janela.atualizar();
     }
 
-    GLFWwindow* window = glfwCreateWindow(
-        800,
-        600,
-        "Sistema Solar",
-        nullptr,
-        nullptr
-    );
-
-    if (!window)
-    {
-        std::cerr << "Erro ao criar janela\n";
-        glfwTerminate();
-        return -1;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glClearColor(0.04f, 0.04f, 0.05f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
+    // Ao terminar a main, o destrutor ~Janela() é chamado automaticamente
     return 0;
 }
+
