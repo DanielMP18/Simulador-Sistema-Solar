@@ -33,6 +33,9 @@ Janela::Janela(int largura, int altura, const char* titulo)
         window = nullptr;
         return;
     }
+
+    // Ativa o Depth Test(algoritmo para ordenação de profundidade 3D)
+    glEnable(GL_DEPTH_TEST);
 }
 
 bool Janela::deveFechar() const {
@@ -45,6 +48,7 @@ void Janela::atualizar() {
 }
 
 void Janela::limpar() const {
+    glClearColor(0.02f, 0.02f, 0.05f, 1.0f); // Cor do espaço
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

@@ -6,21 +6,60 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
+#include <utility>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-Planeta::Planeta(const std::string& nome, float raio, float massa, glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial)
-    : nome(nome), raio(raio), massa(massa), posicao(posicaoInicial), velocidade(velocidadeInicial),
-      VAO(0), VBO(0), EBO(0) {
+Planeta::Planeta(const std::string& nome, float raio, float massa, 
+                 glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial, glm::vec3 cor)
+    : nome(nome), raio(raio), massa(massa), posicao(posicaoInicial), 
+      velocidade(velocidadeInicial), cor(cor), VAO(0), VBO(0), EBO(0) {
     
     gerarEsfera(36, 18);
     configurarBuffers();
 }
+//&& referencia valor temporario, que será destruído após a execução da função.
+//rouba recursos de um objeto temporário para outro já existente, em vez de fazer uma cópia pesada e recriar buffers na placa de vídeo.
+Planeta::Planeta(Planeta&& outro) noexcept //noexcept indica que a função não lançará exceções, permitindo otimizações pelo compilador.
+    : nome(std::move(outro.nome)), raio(outro.raio), massa(outro.massa), 
+      posicao(outro.posicao), velocidade(outro.velocidade), cor(outro.cor),
+      vertices(std::move(outro.vertices)), indices(std::move(outro.indices)),
+      VAO(outro.VAO), VBO(outro.VBO), EBO(outro.EBO) {
+    
+    outro.VAO = 0;
+    outro.VBO = 0;
+    outro.EBO = 0;
+}
+
+Planeta& Planeta::operator=(Planeta&& outro) noexcept {
+    if (this != &outro) {
+        if (EBO != 0) glDeleteBuffers(1, &EBO);
+        if (VBO != 0) glDeleteBuffers(1, &VBO);
+        if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+
+        nome = std::move(outro.nome);
+        raio = outro.raio;
+        massa = outro.massa;
+        posicao = outro.posicao;
+        velocidade = outro.velocidade;
+        cor = outro.cor;
+        vertices = std::move(outro.vertices);
+        indices = std::move(outro.indices);
+
+        VAO = outro.VAO;
+        VBO = outro.VBO;
+        EBO = outro.EBO;
+
+        outro.VAO = 0;
+        outro.VBO = 0;
+        outro.EBO = 0;
+    }
+    return *this;
+}
 
 Planeta::~Planeta() {
-    // RAII: Libera os recursos da GPU quando o objeto for destruído
     if (EBO != 0) glDeleteBuffers(1, &EBO);
     if (VBO != 0) glDeleteBuffers(1, &VBO);
     if (VAO != 0) glDeleteVertexArrays(1, &VAO);
@@ -34,7 +73,7 @@ void Planeta::gerarEsfera(unsigned int sectores, unsigned int stacks) {
     float stackStep = static_cast<float>(M_PI) / stacks;
 
     for (unsigned int i = 0; i <= stacks; ++i) {
-        float stackAngle = static_cast<float>(M_PI) / 2.0f - i * stackStep; // de pi/2 a -pi/2
+        float stackAngle = static_cast<float>(M_PI) / 2.0f - i * stackStep;
         float xy = cosf(stackAngle);
         float z = sinf(stackAngle);
 
@@ -42,15 +81,12 @@ void Planeta::gerarEsfera(unsigned int sectores, unsigned int stacks) {
             float sectorAngle = j * sectorStep;
 
             Vertice vert;
-            // Posições normalizadas para raio 1.0 (a escala real será aplicada no getMatrizModel)
             vert.posicao.x = xy * cosf(sectorAngle);
             vert.posicao.y = xy * sinf(sectorAngle);
             vert.posicao.z = z;
 
-            // Para uma esfera na origem, a normal é igual à posição normalizada
             vert.normal = vert.posicao;
 
-            // Coordenadas de textura UV
             vert.texCoords.s = static_cast<float>(j) / sectores;
             vert.texCoords.t = static_cast<float>(i) / stacks;
 
@@ -58,7 +94,6 @@ void Planeta::gerarEsfera(unsigned int sectores, unsigned int stacks) {
         }
     }
 
-    // Gerar Índices dos Triângulos
     for (unsigned int i = 0; i < stacks; ++i) {
         unsigned int k1 = i * (sectores + 1);
         unsigned int k2 = k1 + sectores + 1;
@@ -91,15 +126,12 @@ void Planeta::configurarBuffers() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // Atributo 0: Posição
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertice), (void*)offsetof(Vertice, posicao));
 
-    // Atributo 1: Normais
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertice), (void*)offsetof(Vertice, normal));
 
-    // Atributo 2: Coordenadas de Textura
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertice), (void*)offsetof(Vertice, texCoords));
 
@@ -108,9 +140,7 @@ void Planeta::configurarBuffers() {
 
 glm::mat4 Planeta::getMatrizModel() const {
     glm::mat4 model = glm::mat4(1.0f);
-    // 1. Move para a posição atual
     model = glm::translate(model, posicao);
-    // 2. Aplica a escala com base no raio
     model = glm::scale(model, glm::vec3(raio));
     return model;
 }

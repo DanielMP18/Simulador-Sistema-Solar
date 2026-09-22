@@ -18,23 +18,31 @@ private:
     glm::vec3 posicao;
     glm::vec3 velocidade;
     float massa;
+    glm::vec3 cor;
 
-    // Dados da geometria
     std::vector<Vertice> vertices;
     std::vector<unsigned int> indices;
 
-    // Handles de OpenGL (VBO, VAO, EBO)
     unsigned int VAO, VBO, EBO;
 
-    void gerarEsfera(unsigned int sectores = 36, unsigned int stacks = 18); //sectores e stacks sao as camadas verticais e horizontais da esfera
+    void gerarEsfera(unsigned int sectores = 36, unsigned int stacks = 18);
     void configurarBuffers();
 
 public:
-    Planeta(const std::string& nome, float raio, float massa, glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial);
+    Planeta(const std::string& nome, float raio, float massa, 
+            glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial, 
+            glm::vec3 cor = glm::vec3(1.0f));
     
     ~Planeta();
 
-    // Getters e Setters
+    // Desativa cópia para proteger os buffers do OpenGL
+    Planeta(const Planeta&) = delete;
+    Planeta& operator=(const Planeta&) = delete;
+
+    // Habilita movimentação (Move Semantics)
+    Planeta(Planeta&& outro) noexcept;
+    Planeta& operator=(Planeta&& outro) noexcept;
+
     const std::string& getNome() const { return nome; }
     glm::vec3 getPosicao() const { return posicao; }
     void setPosicao(const glm::vec3& novaPos) { posicao = novaPos; }
@@ -44,10 +52,9 @@ public:
 
     float getMassa() const { return massa; }
     float getRaio() const { return raio; }
+    glm::vec3 getCor() const { return cor; }
 
-    // Retorna a matriz Model para usar no Shader
     glm::mat4 getMatrizModel() const;
-
     void desenhar() const;
 };
 
