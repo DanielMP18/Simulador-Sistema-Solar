@@ -1,4 +1,5 @@
 #include "Janela.hpp"
+#include <glad/gl.h>
 #include <iostream>
 
 Janela::Janela(int largura, int altura, const char* titulo)
@@ -10,6 +11,10 @@ Janela::Janela(int largura, int altura, const char* titulo)
         return;
     }
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
     window = glfwCreateWindow(largura, altura, titulo, nullptr, nullptr);
     if (!window)
     {
@@ -19,6 +24,15 @@ Janela::Janela(int largura, int altura, const char* titulo)
     }
 
     glfwMakeContextCurrent(window);
+
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+    {
+        std::cerr << "Erro ao inicializar GLAD\n";
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        window = nullptr;
+        return;
+    }
 }
 
 bool Janela::deveFechar() const {
