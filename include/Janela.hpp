@@ -12,6 +12,7 @@ public:
     bool deveFechar() const;
     void atualizar(); 
     void limpar() const;
+    GLFWwindow* getGLFWWindow() const;
 
 private:
     GLFWwindow* window;

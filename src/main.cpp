@@ -10,6 +10,7 @@
 
 #include "Janela.hpp"
 #include "Planeta.hpp"
+#include "Camera.hpp"
 
 unsigned int criarShader() {
     const char* vertexSrc = R"(
@@ -62,9 +63,58 @@ unsigned int criarShader() {
     return shaderProgram;
 }
 
+struct ControleMouse {
+    Camera* camera = nullptr;
+    bool arrastando = false;
+    double ultimoX = 0.0;
+    double ultimoY = 0.0;
+};
+
+void callbackBotaoMouse(GLFWwindow* window, int button, int action, int mods) {
+    auto* controle = static_cast<ControleMouse*>(glfwGetWindowUserPointer(window));
+    if (!controle) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            controle->arrastando = true;
+            glfwGetCursorPos(window, &controle->ultimoX, &controle->ultimoY);
+        } else if (action == GLFW_RELEASE) {
+            controle->arrastando = false;
+        }
+    }
+}
+
+void callbackPosicaoCursor(GLFWwindow* window, double xpos, double ypos) {
+    auto* controle = static_cast<ControleMouse*>(glfwGetWindowUserPointer(window));
+    if (!controle || !controle->arrastando || !controle->camera) return;
+
+    float deltaX = static_cast<float>(xpos - controle->ultimoX);
+    float deltaY = static_cast<float>(ypos - controle->ultimoY);
+
+    controle->ultimoX = xpos;
+    controle->ultimoY = ypos;
+
+    controle->camera->processarMovimentoMouse(deltaX, deltaY);
+}
+
+void callbackScroll(GLFWwindow* window, double xoffset, double yoffset) {
+    auto* controle = static_cast<ControleMouse*>(glfwGetWindowUserPointer(window));
+    if (!controle || !controle->camera) return;
+
+    controle->camera->processarZoom(static_cast<float>(yoffset));
+}
+
 int main()
 {
     Janela janela(1280, 720, "Sistema Solar 3D");
+
+    Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), 50.0f, 90.0f, 30.0f);
+
+    ControleMouse controleMouse{&camera, false, 0.0, 0.0};
+    glfwSetWindowUserPointer(janela.getGLFWWindow(), &controleMouse);
+    glfwSetMouseButtonCallback(janela.getGLFWWindow(), callbackBotaoMouse);
+    glfwSetCursorPosCallback(janela.getGLFWWindow(), callbackPosicaoCursor);
+    glfwSetScrollCallback(janela.getGLFWWindow(), callbackScroll);
 
     unsigned int shaderProgram = criarShader();
 
@@ -86,12 +136,6 @@ int main()
     sistemaSolar.emplace_back("Urano",    0.55f, 14.0f,   glm::vec3(27.5f, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.4f, 0.8f, 0.9f));
     sistemaSolar.emplace_back("Netuno",   0.55f, 17.0f,   glm::vec3(32.0f, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.1f, 0.3f, 0.9f));
 
-    glm::mat4 view = glm::lookAt(
-        glm::vec3(0.0f, 30.0f, 50.0f),
-        glm::vec3(12.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
-
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f), 
         1280.0f / 720.0f, 
@@ -105,6 +149,7 @@ int main()
 
         glUseProgram(shaderProgram);
 
+        glm::mat4 view = camera.getMatrizView();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
