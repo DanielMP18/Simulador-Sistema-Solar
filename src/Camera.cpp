@@ -5,12 +5,12 @@
 Camera::Camera(glm::vec3 alvo, float distancia, float yaw, float pitch)
     : alvo(alvo),
       yaw(yaw),
-      sensibilidade(0.1f),
-      sensibilidadeZoom(2.0f),
-      distanciaMinima(2.0f),
-      distanciaMaxima(300.0f),
-      pitchMinimo(-89.0f),
-      pitchMaximo(89.0f)
+      sensibilidade(0.2f),
+      sensibilidadeZoom(0.12f),
+      distanciaMinima(4.0f),
+      distanciaMaxima(500.0f),
+      pitchMinimo(-85.0f),
+      pitchMaximo(85.0f)
 {
     this->distancia = std::clamp(distancia, distanciaMinima, distanciaMaxima);
     this->pitch = std::clamp(pitch, pitchMinimo, pitchMaximo);
@@ -56,12 +56,29 @@ void Camera::setDistancia(float novaDistancia) {
 }
 
 void Camera::processarMovimentoMouse(float deltaX, float deltaY) {
-    yaw += deltaX * sensibilidade;
-    pitch = std::clamp(pitch + deltaY * sensibilidade, pitchMinimo, pitchMaximo);
+    yaw = std::fmod(yaw + deltaX * sensibilidade, 360.0f);
+    pitch = std::clamp(pitch - deltaY * sensibilidade, pitchMinimo, pitchMaximo);
+}
+
+void Camera::processarPanMouse(float deltaX, float deltaY, int alturaViewport) {
+    if (alturaViewport <= 0) {
+        return;
+    }
+
+    const glm::vec3 direcao = glm::normalize(alvo - getPosicao());
+    const glm::vec3 direita =
+        glm::normalize(glm::cross(direcao, glm::vec3(0.0f, 1.0f, 0.0f)));
+    const glm::vec3 cima = glm::normalize(glm::cross(direita, direcao));
+    const float unidadesPorPixel =
+        2.0f * distancia * std::tan(glm::radians(22.5f)) /
+        static_cast<float>(alturaViewport);
+
+    alvo += unidadesPorPixel * (-deltaX * direita + deltaY * cima);
 }
 
 void Camera::processarZoom(float offset) {
-    setDistancia(distancia - offset * sensibilidadeZoom);
+    const float escala = std::exp(-offset * sensibilidadeZoom);
+    setDistancia(distancia * escala);
 }
 
 void Camera::setSensibilidade(float sens) {

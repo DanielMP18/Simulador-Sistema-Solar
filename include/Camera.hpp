@@ -22,6 +22,7 @@ public:
     void setDistancia(float novaDistancia);
 
     void processarMovimentoMouse(float deltaX, float deltaY);
+    void processarPanMouse(float deltaX, float deltaY, int alturaViewport);
     void processarZoom(float offset);
 
     void setSensibilidade(float sens);

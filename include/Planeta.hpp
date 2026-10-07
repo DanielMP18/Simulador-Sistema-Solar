@@ -15,9 +15,9 @@ class Planeta {
 private:
     std::string nome;
     float raio;
-    glm::vec3 posicao;
-    glm::vec3 velocidade;
-    float massa;
+    glm::dvec3 posicao;
+    glm::dvec3 velocidade;
+    double massa;
     glm::vec3 cor;
 
     std::vector<Vertice> vertices;
@@ -32,6 +32,9 @@ public:
     Planeta(const std::string& nome, float raio, float massa, 
             glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial, 
             glm::vec3 cor = glm::vec3(1.0f));
+    Planeta(const std::string& nome, float raio, double massa,
+            glm::dvec3 posicaoInicial, glm::dvec3 velocidadeInicial,
+            glm::vec3 cor = glm::vec3(1.0f));
     
     ~Planeta();
 
@@ -44,13 +47,17 @@ public:
     Planeta& operator=(Planeta&& outro) noexcept;
 
     const std::string& getNome() const { return nome; }
-    glm::vec3 getPosicao() const { return posicao; }
-    void setPosicao(const glm::vec3& novaPos) { posicao = novaPos; }
+    glm::vec3 getPosicao() const { return glm::vec3(posicao); }
+    glm::dvec3 getPosicaoPrecisaoDupla() const { return posicao; }
+    void setPosicao(const glm::vec3& novaPos) { posicao = glm::dvec3(novaPos); }
+    void setPosicaoPrecisaoDupla(const glm::dvec3& novaPos) { posicao = novaPos; }
     
-    glm::vec3 getVelocidade() const { return velocidade; }
-    void setVelocidade(const glm::vec3& novaVel) { velocidade = novaVel; }
+    glm::vec3 getVelocidade() const { return glm::vec3(velocidade); }
+    glm::dvec3 getVelocidadePrecisaoDupla() const { return velocidade; }
+    void setVelocidade(const glm::vec3& novaVel) { velocidade = glm::dvec3(novaVel); }
+    void setVelocidadePrecisaoDupla(const glm::dvec3& novaVel) { velocidade = novaVel; }
 
-    float getMassa() const { return massa; }
+    double getMassa() const { return massa; }
     float getRaio() const { return raio; }
     glm::vec3 getCor() const { return cor; }
 

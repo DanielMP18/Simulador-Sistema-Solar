@@ -48,7 +48,7 @@ void Janela::atualizar() {
 }
 
 void Janela::limpar() const {
-    glClearColor(0.02f, 0.02f, 0.05f, 1.0f); // Cor do espaço
+    glClearColor(0.02f, 0.02f, 0.05f, 0.5f); // Cor do espaço
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

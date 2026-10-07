@@ -14,7 +14,13 @@
 
 Planeta::Planeta(const std::string& nome, float raio, float massa, 
                  glm::vec3 posicaoInicial, glm::vec3 velocidadeInicial, glm::vec3 cor)
-    : nome(nome), raio(raio), massa(massa), posicao(posicaoInicial), 
+    : Planeta(nome, raio, static_cast<double>(massa), glm::dvec3(posicaoInicial),
+              glm::dvec3(velocidadeInicial), cor) {
+}
+
+Planeta::Planeta(const std::string& nome, float raio, double massa,
+                 glm::dvec3 posicaoInicial, glm::dvec3 velocidadeInicial, glm::vec3 cor)
+    : nome(nome), raio(raio), massa(massa), posicao(posicaoInicial),
       velocidade(velocidadeInicial), cor(cor), VAO(0), VBO(0), EBO(0) {
     
     gerarEsfera(36, 18);
@@ -140,7 +146,7 @@ void Planeta::configurarBuffers() {
 
 glm::mat4 Planeta::getMatrizModel() const {
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, posicao);
+    model = glm::translate(model, glm::vec3(posicao));
     model = glm::scale(model, glm::vec3(raio));
     return model;
 }
