@@ -4,19 +4,28 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-class Janela {
+#include <string>
+
+class Janela final {
 
 public:
-    Janela(int largura, int altura, const char* titulo);
-    ~Janela();
+    Janela(int largura, int altura, const std::string& titulo);
+    ~Janela() noexcept;
+
+    Janela(const Janela&) = delete;
+    Janela& operator=(const Janela&) = delete;
+
     bool deveFechar() const;
-    void atualizar(); 
+    void processarEventos() const;
+    void apresentar() const;
     void limpar() const;
     GLFWwindow* getGLFWWindow() const;
+    void obterTamanhoFramebuffer(int& largura, int& altura) const;
 
 private:
-    GLFWwindow* window;
-    int largura() const;
-    int altura() const;
+    GLFWwindow* window = nullptr;
+
+    static void callbackRedimensionamento(GLFWwindow* window, int largura, int altura);
 };
+
 #endif // JANELA_HPP

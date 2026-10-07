@@ -46,7 +46,7 @@ std::vector<Fisica::Derivada> Fisica::calcularDerivadas(
     return derivadas;
 }
 
-void Fisica::atualizar(std::vector<Planeta>& corpos, double passoDeTempo) const {
+void Fisica::atualizar(std::vector<CorpoCeleste>& corpos, double passoDeTempo) const {
     if (!std::isfinite(passoDeTempo) || passoDeTempo <= 0.0) {
         throw std::invalid_argument("O passo de tempo deve ser finito e positivo.");
     }
@@ -57,10 +57,10 @@ void Fisica::atualizar(std::vector<Planeta>& corpos, double passoDeTempo) const 
 
     for (std::size_t i = 0; i < quantidade; ++i) {
         estadoInicial[i] = {
-            corpos[i].getPosicaoPrecisaoDupla(),
-            corpos[i].getVelocidadePrecisaoDupla()
+            corpos[i].posicao,
+            corpos[i].velocidade
         };
-        massas[i] = corpos[i].getMassa();
+        massas[i] = corpos[i].massa;
         if (!vetorFinito(estadoInicial[i].posicao) ||
             !vetorFinito(estadoInicial[i].velocidade) ||
             !std::isfinite(massas[i]) || massas[i] < 0.0) {
@@ -106,7 +106,7 @@ void Fisica::atualizar(std::vector<Planeta>& corpos, double passoDeTempo) const 
     }
 
     for (std::size_t i = 0; i < quantidade; ++i) {
-        corpos[i].setPosicaoPrecisaoDupla(estadoFinal[i].posicao);
-        corpos[i].setVelocidadePrecisaoDupla(estadoFinal[i].velocidade);
+        corpos[i].posicao = estadoFinal[i].posicao;
+        corpos[i].velocidade = estadoFinal[i].velocidade;
     }
 }

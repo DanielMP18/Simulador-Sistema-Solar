@@ -1,49 +1,75 @@
-- Simulador do Sistema Solar -
+# Simulador do Sistema Solar
 
-Para compilar e executar este projeto, você precisará das seguintes bibliotecas:
+Simulador visual 3D de um sistema gravitacional N-corpos, implementado em C++17,
+OpenGL 3.3, GLFW e GLM. A integracao numerica usa RK4 em precisao dupla.
 
-    C++11 (ou superior)
+## Requisitos
 
-    OpenGL 3.3+
+- CMake 3.20 ou superior
+- Compilador C++17
+- Python com o executavel `glad` (GLAD 2)
+- Bibliotecas de desenvolvimento do OpenGL
+- Conexao com a internet na primeira configuracao do CMake (GLFW e GLM sao
+  obtidos via `FetchContent`)
 
-    GLFW: Gerenciamento de janelas e entrada de dados.
+Instale o gerador GLAD no ambiente virtual do projeto, por exemplo:
 
-    GLAD: Carregamento dos ponteiros de função do OpenGL.
+```sh
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install glad2
+```
 
-    GLM: Biblioteca matemática para cálculos de matrizes e vetores (Mat4, Vec3).
+No Windows, ative `.venv\Scripts\activate` em vez do comando de ativacao Unix.
 
-Conceitos de Computação Gráfica Aplicados
+## Compilar e executar
 
-    Pipeline Gráfico: Uso de Vertex e Fragment Shaders para projetar coordenadas 3D em uma tela 2D e aplicar cores sólidas com sombreamento difuso básico.
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/SolarSystem
+```
 
-    Transformações (MVP): Cálculo de matrizes locais. A matriz Model translada e escala cada planeta baseando-se em sua distância da origem e raio geométrico.
+No Windows, execute `build\SolarSystem.exe`.
 
-    Draw Elements: Renderização indexada via glDrawElements e EBO (Element Buffer Object) para economizar memória reutilizando vértices compartilhados entre os triângulos adjacentes da esfera.
+## Testes
 
-Simulação Física
+Os testes unitarios da fisica nao precisam criar uma janela OpenGL:
 
-    A gravitação newtoniana é integrada por RK4 sobre o estado completo (posição
-    e velocidade de todos os corpos). Cada estágio calcula as acelerações usando
-    simultaneamente as posições daquele estágio, incluindo todos os pares de corpos
-    e o parâmetro de suavização epsilon.
+```sh
+ctest --test-dir build --output-on-failure
+```
 
-    O estado físico usa vetores e massas em precisão dupla. O exemplo usa unidades
-    normalizadas, com G = 1e-4 e epsilon = 1e-3; ambos podem ser ajustados no
-    construtor de Fisica. A animação avança o tempo simulado 100 vezes mais rápido
-    que o relógio, usando subpassos RK4 de no máximo 0,05 s para manter a precisão.
+## Controles
 
-    Os planetas começam com velocidades tangenciais calculadas para órbitas
-    circulares aproximadas em torno do Sol. O recuo do Sol é incluído para que o
-    momento linear inicial total seja zero. As massas planetárias usam a mesma
-    escala relativa à massa solar; as distâncias continuam comprimidas para a
-    visualização, portanto as órbitas são uma aproximação e não uma efeméride real.
+- Botao esquerdo + arrastar: orbitar a camera.
+- Botao direito + arrastar: deslocar o enquadramento.
+- Roda do mouse: aproximar ou afastar a camera.
 
-Visualização
+## Organizacao
 
-    A câmera inicia centralizada no conjunto do sistema solar. Cada planeta deixa
-    uma trilha colorida limitada aos seus 2.400 últimos pontos, facilitando
-    acompanhar o sentido e o percurso do movimento. Arraste com o botão esquerdo
-    para orbitar, com o botão direito para deslocar o enquadramento e use a roda
-    do mouse para ajustar o zoom proporcional à distância.
+- `include/` contem as interfaces publicas dos componentes.
+- `src/Aplicacao.cpp` coordena janela, entrada, simulacao e renderizacao.
+- `src/Janela.cpp` encapsula o ciclo de vida GLFW/OpenGL.
+- `src/Renderizador.cpp` possui shaders, malha compartilhada de esfera e trilhas.
+- O renderizador envia os atributos de todos os corpos em um buffer de instancias
+  e desenha as esferas em uma chamada `glDrawElementsInstanced`.
+- `src/Camera.cpp` implementa os controles e matrizes da camera.
+- `include/CorpoCeleste.hpp` define os dados dos corpos sem dependencia de OpenGL.
+- `src/SistemaSolar.cpp` cria o sistema inicial e velocidades orbitais.
+- `src/Fisica.cpp` integra simultaneamente o estado de todos os corpos por RK4.
+- `tests/` valida propriedades basicas do integrador.
 
-<img width="1276" height="749" alt="image" src="https://github.com/user-attachments/assets/dce9d709-243a-4c1a-91e4-9a123aab46fc" />
+## Modelo fisico
+
+A gravidade newtoniana com suavizacao `epsilon` e calculada entre todos os pares
+de corpos. Os quatro estagios do RK4 avaliam o estado completo do sistema, e os
+novos estados so sao aplicados depois de calculada a combinacao final.
+Essa parte permanece na CPU, enquanto geometria, transformacoes por instancia,
+iluminacao, trilhas e rasterizacao sao processadas pela GPU via OpenGL.
+
+O exemplo usa unidades normalizadas (`G = 1e-4`, `epsilon = 1e-3`), velocidades
+tangenciais iniciais para orbitas circulares aproximadas, e avanca o tempo
+simulado 100 vezes mais rapido que o tempo real. A cada quadro, o delta e
+subdividido em passos de integracao de no maximo `0.05`. Massas e distancias sao
+escaladas para visualizacao, portanto o resultado nao e uma efemeride astronomica.

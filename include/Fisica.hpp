@@ -3,13 +3,13 @@
 
 #include <vector>
 
-#include "Planeta.hpp"
+#include "CorpoCeleste.hpp"
 
 class Fisica {
 public:
     explicit Fisica(double constanteGravitacional = 1.0, double epsilon = 1e-3);
 
-    void atualizar(std::vector<Planeta>& corpos, double passoDeTempo) const;
+    void atualizar(std::vector<CorpoCeleste>& corpos, double passoDeTempo) const;
 
 private:
     struct Estado {
